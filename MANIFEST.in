@@ -1,0 +1,4 @@
+include LICENSE
+include README.md
+recursive-include tom_dash/static *
+recursive-include tom_dash/templates *
