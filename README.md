@@ -8,7 +8,7 @@ Please note that this module is a proof-of-concept and should be considered to b
 
 Install the module into your TOM environment:
 
-    pip install git+https://github.com/TOMToolkit/tom_dash
+    `pip install git+https://github.com/TOMToolkit/tom_dash`
 
 Add `tom_dash` and `django_plotly_dash.apps.DjangoPlotlyDashConfig` to the `INSTALLED_APPS` in your TOM's `settings.py`:
 
@@ -102,7 +102,7 @@ Add `dash_extras` to the `{% load bootstrap4 target_extras ... %}` templatetag n
 
 Replace `{% target_distribution filter.qs %}` with `{% dash_target_distribution filter.qs %}`
 
-# Writing a dash component
+## Writing a dash component
 
 With the setup followed above, a dash component can be written with no further setup, but requires a bit of knowhow.
 
@@ -133,4 +133,27 @@ def dash_target_distribution(context):
     }
 ```
 
-The last piece is the dash app itself. The `target_distribution` example can be found [here]()
+The last piece is the dash app itself. The full `target_distribution` example can be found [here](https://github.com/TOMToolkit/tom_dash/blob/main/tom_dash/plots/target_distribution.py). Please refer to the [Plotly Dash](https://dash.plotly.com/) and [Django Plotly Dash](https://django-plotly-dash.readthedocs.io/en/latest/) documentation for specific implementation documentation. However, in the context of writing a Dash app to work with the previously shown templatetag and partial, it should be noted that any components defined in the `dash_context` in the templatetag must match the IDs and property keys of the corresponding dash components:
+
+```python
+app.layout = dhc.Div([
+    dcc.Graph(
+        id='target-distribution',
+        figure=Figure(data=[], layout=layout)
+    ),
+    dcc.Input(id='username', type='hidden', value=''),
+    dcc.Store(id='target-filter', data={})
+])
+
+@app.callback(
+    Output('target-distribution', 'figure'),
+    [Input('username', 'value')],
+    [State('target-filter', 'data')]
+)
+def get_target_distribution_plot(username, target_filter_data):
+    ...
+```
+
+Because the `get_target_distribution_plot` callback is triggered on page load, the `username` and `target_filter` dictionary entries will provide initial values to the `dcc.Input(id='username')` and `dcc.Store(id='target-filter')` that will be used to load the target distribution plot. Note that the nested dictionaries for each item in the `dash_context` includes a key/value pair that corresponds with the properties on the component type--`username` is an `Input` component that has a `value` property, while `target-filter` is a `State` component that has a `data` property.
+
+While this plot doesn't have any visible inputs that would alter the state, custom components can include callbacks that fire on interactive inputs.
